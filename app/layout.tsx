@@ -17,8 +17,12 @@ export const metadata: Metadata = {
   description: "Join the ultimate cybersecurity challenge. Test your hacking skills, compete with elite security professionals, and win amazing prizes in our CTF competition.",
   keywords: "CTF, capture the flag, cybersecurity, hacking, competition, prizes, web security, cryptography, forensics",
   authors: [{ name: "CyberCTF Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
