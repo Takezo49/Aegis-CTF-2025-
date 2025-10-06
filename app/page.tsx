@@ -114,35 +114,65 @@ export default function Home() {
 
           {/* Testimonials */}
           <div className="text-center mb-20">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-12">What Hackers Say</h2>
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-12">What Cyber Experts Say</h2>
             <div className="grid lg:grid-cols-2 gap-8">
               <div className="p-8 bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-gray-700">
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                    <span className="font-bold text-black">AX</span>
+                    <span className="font-bold text-black">KM</span>
                   </div>
                   <div>
-                    <div className="font-bold text-white">Alex Chen</div>
-                    <div className="text-gray-400 text-sm">Security Researcher</div>
+                    <div className="font-bold text-white">Kevin Mitnick</div>
+                    <div className="text-gray-400 text-sm">World's Most Famous Hacker</div>
                   </div>
                 </div>
                 <p className="text-gray-300 italic">
-                  "Best CTF competition I've participated in. The challenges were mind-bending and the community is incredible!"
+                  "The best way to learn about security is to break things. CTF competitions provide that perfect controlled environment to push your limits."
                 </p>
               </div>
 
               <div className="p-8 bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-gray-700">
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="font-bold text-black">SM</span>
+                    <span className="font-bold text-black">BS</span>
                   </div>
                   <div>
-                    <div className="font-bold text-white">Sarah Miller</div>
-                    <div className="text-gray-400 text-sm">Ethical Hacker</div>
+                    <div className="font-bold text-white">Bruce Schneier</div>
+                    <div className="text-gray-400 text-sm">Cryptography Expert & Author</div>
                   </div>
                 </div>
                 <p className="text-gray-300 italic">
-                  "Amazing learning experience! Improved my skills significantly and met awesome people in the cybersecurity field."
+                  "Security is a process, not a product. CTF challenges teach you to think like both attacker and defender - essential skills in cybersecurity."
+                </p>
+              </div>
+
+              <div className="p-8 bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-gray-700">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-red-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-black">KB</span>
+                  </div>
+                  <div>
+                    <div className="font-bold text-white">Katie Bouman</div>
+                    <div className="text-gray-400 text-sm">MIT Computer Scientist</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 italic">
+                  "Hands-on challenges like CTFs bridge the gap between theoretical knowledge and real-world application in cybersecurity."
+                </p>
+              </div>
+
+              <div className="p-8 bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-gray-700">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-black">HD</span>
+                  </div>
+                  <div>
+                    <div className="font-bold text-white">HD Moore</div>
+                    <div className="text-gray-400 text-sm">Creator of Metasploit</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 italic">
+                  "CTF competitions are where the next generation of security researchers are born. They provide real-world problem solving under pressure."
                 </p>
               </div>
             </div>
