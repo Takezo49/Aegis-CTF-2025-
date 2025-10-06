@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/supabaseClient'
 
 export default function Register() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -87,34 +88,89 @@ export default function Register() {
     if (!validateForm()) return
 
     setIsLoading(true)
+    setErrors({})
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
       if (isLogin) {
         // Handle login
-        console.log('Login attempt:', formData.email)
-        window.location.href = '/dashboard'
-      } else {
-        // Handle signup
-        console.log('Signup attempt:', formData)
-        setShowSuccess(true)
-        setTimeout(() => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+
+        if (error) {
+          setErrors({ general: error.message })
+          return
+        }
+
+        if (data.user) {
+          console.log('Login successful:', data.user)
           window.location.href = '/dashboard'
-        }, 2000)
+        }
+      } else {
+        // Handle signup with username
+        const { data, error: signupError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        })
+
+        if (signupError) {
+          setErrors({ general: signupError.message })
+          return
+        }
+
+        if (data.user) {
+          // Insert profile data into profiles table
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                username: formData.username,
+                email: formData.email,
+              },
+            ])
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            setErrors({ general: `Profile setup failed: ${profileError.message}. Please contact support.` })
+            return
+          }
+
+          console.log('User registered successfully:', data.user)
+          setShowSuccess(true)
+          setTimeout(() => {
+            window.location.href = '/team'
+          }, 2000)
+        }
       }
     } catch (error) {
+      console.error('Auth error:', error)
       setErrors({ general: 'An error occurred. Please try again.' })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleOAuthLogin = (provider: string) => {
-    console.log(`${provider} OAuth login`)
-    // Implement OAuth logic here
-    window.location.href = '/dashboard'
+  const handleOAuthLogin = async (provider: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider as 'google' | 'github',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      })
+
+      if (error) {
+        console.error('OAuth error:', error)
+        setErrors({ general: error.message })
+      } else {
+        console.log(`${provider} OAuth initiated:`, data)
+      }
+    } catch (error) {
+      console.error('OAuth error:', error)
+      setErrors({ general: 'OAuth authentication failed. Please try again.' })
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
