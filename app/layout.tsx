@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,9 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "CyberCTF - Elite Capture The Flag Competition",
-  description: "Join the ultimate cybersecurity challenge. Test your hacking skills, compete with elite security professionals, and win amazing prizes in our CTF competition.",
+  description: "Join the ultimate cybersecurity challenge. Test your hacking skills, compete with elite security professionals, and prove you have what it takes.",
   keywords: "CTF, capture the flag, cybersecurity, hacking, competition, prizes, web security, cryptography, forensics",
   authors: [{ name: "CyberCTF Team" }],
   robots: "index, follow",
@@ -33,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceMono.variable} antialiased`}
       >
         {children}
       </body>
