@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-export default function Home() {
+export default function HomePage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [showGradient, setShowGradient] = useState(false)
 
@@ -64,35 +64,14 @@ export default function Home() {
         <circle cx="80%" cy="80%" r="2" className="detail-dot" style={{ animationDelay: '3.6s' }} />
       </svg>
 
-      {/* Sidebar Navigation */}
-      <nav className="fixed left-0 top-0 h-full w-64 bg-black/90 backdrop-blur-sm border-r border-white/10 z-20 p-8">
-        <div className="nav-item mb-12" style={{ animationDelay: '0.2s' }}>
-          <h2 className="text-2xl font-bold">AIGIESCTF_2025</h2>
-          <div className="w-8 h-px bg-white/30 mt-2"></div>
-        </div>
-        
-        <ul className="space-y-6">
-          <li className="nav-item" style={{ animationDelay: '0.4s' }}>
-            <a href="/" className="block text-lg hover:text-white/80 transition-colors">HOME</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '0.6s' }}>
-            <a href="/about" className="block text-lg hover:text-white/80 transition-colors">ABOUT</a>
-          </li>
-        </ul>
-        <div className="absolute bottom-8 left-8 nav-item" style={{ animationDelay: '1.4s' }}>
-          <div className="text-sm opacity-60">
-            <p>v2.1.0</p>
-            <p>ONLINE</p>
-          </div>
-        </div>
-      </nav>
+      {/* Floating Elements */}
       <div className="floating-element" style={{ top: '25%', left: '35%', animationDelay: '3s' }}></div>
       <div className="floating-element" style={{ top: '60%', left: '85%', animationDelay: '3.5s' }}></div>
       <div className="floating-element" style={{ top: '40%', left: '30%', animationDelay: '4s' }}></div>
       <div className="floating-element" style={{ top: '75%', left: '90%', animationDelay: '4.5s' }}></div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen ml-64 flex flex-col justify-center items-center px-16 py-20">
+      <div className="relative z-10 min-h-screen flex flex-col justify-center items-center px-16 py-20">
         {/* Center Content */}
         <div className="text-center max-w-4xl mx-auto">
           <div className="mb-8">
@@ -123,10 +102,10 @@ export default function Home() {
           {/* CTA Section */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '4s' }}>
             <button className="px-8 py-4 bg-white text-black font-bold text-lg hover:bg-white/90 transition-all duration-300 transform hover:scale-105">
-              <a href="/register" className="block w-full h-full">Register Team</a>
+              <a href="/register" className="block w-full h-full">Register Now</a>
             </button>
             <button className="px-8 py-4 border border-white text-white font-bold text-lg hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105">
-              LEARN MORE
+              <a href="/register?isLogin=true" className="block w-full h-full">Login</a>
             </button>
           </div>
           
@@ -137,13 +116,161 @@ export default function Home() {
         </div>
       </div>
 
+      {/* About Content Section */}
+      <div className="relative z-10 min-h-screen px-16 py-20">
+        <div className="max-w-6xl mx-auto">
+
+          {/* What is AegisCTF */}
+          <div className="mb-20 opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '5s' }}>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="text-left">
+                <h3 className="text-3xl lg:text-4xl font-bold mb-8 text-white/90">
+                  <span className="word" data-delay="0">What is AegisCTF?</span>
+                </h3>
+                <p className="text-lg text-white/70 leading-relaxed mb-6">
+                  <span className="word" data-delay="200">AegisCTF</span>
+                  <span className="word" data-delay="350">is</span>
+                  <span className="word" data-delay="500">an</span>
+                  <span className="word" data-delay="650">elite</span>
+                  <span className="word" data-delay="800">cybersecurity</span>
+                  <span className="word" data-delay="950">competition</span>
+                  <span className="word" data-delay="1100">that</span>
+                  <span className="word" data-delay="1250">tests</span>
+                  <span className="word" data-delay="1400">participants'</span>
+                  <span className="word" data-delay="1550">abilities</span>
+                  <span className="word" data-delay="1700">across</span>
+                  <span className="word" data-delay="1850">multiple</span>
+                  <span className="word" data-delay="2000">domains</span>
+                  <span className="word" data-delay="2150">of</span>
+                  <span className="word" data-delay="2300">information</span>
+                  <span className="word" data-delay="2450">security.</span>
+                </p>
+              </div>
+              <div className="relative">
+                <div className="w-full h-80 bg-gradient-to-br from-white/10 to-white/5 rounded-lg border border-white/20 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+                      <span className="text-3xl">🔒</span>
+                    </div>
+                    <p className="text-white/60 text-lg font-semibold">Security Challenges</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Competition Format */}
+          <div className="mb-20 opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '5.5s' }}>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="relative order-2 lg:order-1">
+                <div className="w-full h-80 bg-gradient-to-br from-white/10 to-white/5 rounded-lg border border-white/20 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+                      <span className="text-3xl">🏆</span>
+                    </div>
+                    <p className="text-white/60 text-lg font-semibold">Competition Format</p>
+                  </div>
+                </div>
+              </div>
+              <div className="text-left order-1 lg:order-2">
+                <h3 className="text-3xl lg:text-4xl font-bold mb-8 text-white/90">
+                  <span className="word" data-delay="0">Competition Format</span>
+                </h3>
+                <p className="text-lg text-white/70 leading-relaxed mb-6">
+                  <span className="word" data-delay="200">Individual</span>
+                  <span className="word" data-delay="350">players</span>
+                  <span className="word" data-delay="500">compete</span>
+                  <span className="word" data-delay="650">solo</span>
+                  <span className="word" data-delay="800">in</span>
+                  <span className="word" data-delay="950">various</span>
+                  <span className="word" data-delay="1100">categories</span>
+                  <span className="word" data-delay="1250">including</span>
+                  <span className="word" data-delay="1400">web</span>
+                  <span className="word" data-delay="1550">security,</span>
+                  <span className="word" data-delay="1700">cryptography,</span>
+                  <span className="word" data-delay="1850">forensics,</span>
+                  <span className="word" data-delay="2000">and</span>
+                  <span className="word" data-delay="2150">reverse</span>
+                  <span className="word" data-delay="2300">engineering.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Who Can Participate */}
+          <div className="mb-20 opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '6s' }}>
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="text-left">
+                <h3 className="text-3xl lg:text-4xl font-bold mb-8 text-white/90">
+                  <span className="word" data-delay="0">Who Can Participate?</span>
+                </h3>
+                <p className="text-lg text-white/70 leading-relaxed mb-6">
+                  <span className="word" data-delay="200">Whether</span>
+                  <span className="word" data-delay="350">you're</span>
+                  <span className="word" data-delay="500">a</span>
+                  <span className="word" data-delay="650">seasoned</span>
+                  <span className="word" data-delay="800">cybersecurity</span>
+                  <span className="word" data-delay="950">professional</span>
+                  <span className="word" data-delay="1100">or</span>
+                  <span className="word" data-delay="1250">an</span>
+                  <span className="word" data-delay="1400">ambitious</span>
+                  <span className="word" data-delay="1550">student,</span>
+                  <span className="word" data-delay="1700">AegisCTF</span>
+                  <span className="word" data-delay="1850">welcomes</span>
+                  <span className="word" data-delay="2000">individual</span>
+                  <span className="word" data-delay="2150">participants</span>
+                  <span className="word" data-delay="2300">of</span>
+                  <span className="word" data-delay="2450">all</span>
+                  <span className="word" data-delay="2600">skill</span>
+                  <span className="word" data-delay="2750">levels.</span>
+                </p>
+              </div>
+              <div className="relative">
+                <div className="w-full h-80 bg-gradient-to-br from-white/10 to-white/5 rounded-lg border border-white/20 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+                      <span className="text-3xl">👥</span>
+                    </div>
+                    <p className="text-white/60 text-lg font-semibold">Individual Competition</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced CTA Section */}
+          <div className="text-center opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '6.5s' }}>
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-white/90 mb-4">Ready to Test Your Skills?</h2>
+              <p className="text-white/60 mb-8 max-w-2xl mx-auto">
+                Test your individual cybersecurity skills in this solo CTF challenge
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
+              <button className="px-10 py-5 bg-white text-black font-bold text-xl hover:bg-white/90 transition-all duration-300 transform hover:scale-105">
+                <a href="/register" className="block w-full h-full">Register Now</a>
+              </button>
+              <button className="px-10 py-5 border-2 border-white text-white font-bold text-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105">
+                Learn More About CTF
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center text-sm text-white/50 opacity-0 animate-[word-appear_0.6s_ease-out_forwards]" style={{ animationDelay: '7s' }}>
+            <p>AEGISCTF 2025 - WHERE LEGENDS ARE FORGED</p>
+            <div className="w-px h-8 bg-white/30 mx-auto mt-4"></div>
+          </div>
+        </div>
+      </div>
+
       {/* Interactive Gradient */}
       {showGradient && (
-        <div 
+        <div
           className="fixed pointer-events-none w-96 h-96 bg-gradient-radial from-white/5 to-transparent rounded-full blur-3xl transition-all duration-500 ease-out opacity-100"
-          style={{ 
-            left: mousePosition.x - 192, 
-            top: mousePosition.y - 192 
+          style={{
+            left: mousePosition.x - 192,
+            top: mousePosition.y - 192
           }}
         />
       )}

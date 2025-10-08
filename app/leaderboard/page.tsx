@@ -22,6 +22,7 @@ export default function LeaderboardPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [showGradient, setShowGradient] = useState(false)
   const [activeTab, setActiveTab] = useState<'individual' | 'team'>('individual')
+  const [currentTime, setCurrentTime] = useState<string>('')
 
   // Mock data as specified
   const players: Player[] = [
@@ -40,19 +41,9 @@ export default function LeaderboardPage() {
   ]
 
   useEffect(() => {
-    const animateWords = () => {
-      const words = document.querySelectorAll('.word')
-      words.forEach((word: Element) => {
-        const delay = parseInt((word as HTMLElement).dataset.delay || '0')
-        setTimeout(() => {
-          ;(word as HTMLElement).style.animation = 'word-appear 0.6s ease-out forwards'
-        }, delay)
-      })
-    }
-
-    const timer = setTimeout(animateWords, 500)
-    return () => clearTimeout(timer)
-  }, [activeTab])
+    // Set current time only on client side to avoid hydration mismatch
+    setCurrentTime(new Date().toLocaleTimeString())
+  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -130,18 +121,12 @@ export default function LeaderboardPage() {
             <a href="/" className="block text-lg hover:text-white/80 transition-colors">HOME</a>
           </li>
           <li className="nav-item" style={{ animationDelay: '0.6s' }}>
-            <a href="/about" className="block text-lg hover:text-white/80 transition-colors">ABOUT</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '0.8s' }}>
-            <a href="/challenges" className="block text-lg hover:text-white/80 transition-colors">CHALLENGES</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '1s' }}>
-            <a href="/team" className="block text-lg hover:text-white/80 transition-colors">TEAM</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '1.2s' }}>
             <a href="/dashboard" className="block text-lg hover:text-white/80 transition-colors">DASHBOARD</a>
           </li>
-          <li className="nav-item" style={{ animationDelay: '1.4s' }}>
+          <li className="nav-item" style={{ animationDelay: '0.8s' }}>
+            <a href="/team" className="block text-lg hover:text-white/80 transition-colors">TEAM</a>
+          </li>
+          <li className="nav-item" style={{ animationDelay: '1s' }}>
             <a href="/leaderboard" className="block text-lg text-white/90">LEADERBOARD</a>
           </li>
         </ul>
@@ -388,7 +373,7 @@ export default function LeaderboardPage() {
             {/* Last Updated */}
             <div className="mt-8 text-center">
               <p className="text-white/50 text-sm">
-                Last updated: {new Date().toLocaleTimeString()}
+                Last updated: {currentTime}
               </p>
               <div className="w-px h-4 bg-white/30 mx-auto mt-2"></div>
             </div>

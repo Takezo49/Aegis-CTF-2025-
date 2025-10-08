@@ -1,55 +1,68 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/supabaseClient'
 
-interface Challenge {
+type TabType = 'overview' | 'profile' | 'leaderboards' | 'progress'
+
+interface Player {
+  rank: number
+  name: string
+  score: number
+  solved: number
+  lastSolved?: string
+}
+
+interface Achievement {
   id: string
   title: string
-  points: number
-  status: 'solved' | 'unsolved'
-  category: string
   description: string
+  icon: string
+  unlocked: boolean
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+}
+
+interface Activity {
+  id: string
+  type: 'challenge_completed' | 'streak_achieved' | 'rank_up' | 'badge_earned'
+  title: string
+  description: string
+  timestamp: string
+  icon: string
 }
 
 export default function Dashboard() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [showGradient, setShowGradient] = useState(false)
-  const [challenges, setChallenges] = useState<Challenge[]>([
-    {
-      id: '1',
-      title: 'SQL Injection Master',
-      points: 100,
-      status: 'solved',
-      category: 'Web',
-      description: 'Find the vulnerability in the login form'
-    },
-    {
-      id: '2',
-      title: 'Crypto Nightmare',
-      points: 150,
-      status: 'unsolved',
-      category: 'Crypto',
-      description: 'Decrypt the ancient cipher'
-    },
-    {
-      id: '3',
-      title: 'Reverse Engineering',
-      points: 200,
-      status: 'unsolved',
-      category: 'Reverse',
-      description: 'Unpack the mysterious binary'
-    },
-    {
-      id: '4',
-      title: 'Forensics Investigation',
-      points: 175,
-      status: 'unsolved',
-      category: 'Forensics',
-      description: 'Analyze the suspicious network traffic'
-    }
-  ])
-  const [flagInputs, setFlagInputs] = useState<{[key: string]: string}>({})
-  const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({})
+  const [user, setUser] = useState<any>(null)
+  const [player, setPlayer] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [currentTime, setCurrentTime] = useState<string>('')
+  const [currentIP, setCurrentIP] = useState<string>('')
+
+  // Enhanced mock data
+  const players: Player[] = [
+    { rank: 1, name: "Alice", score: 120, solved: 3, lastSolved: "2 hours ago" },
+    { rank: 2, name: "Bob", score: 100, solved: 2, lastSolved: "4 hours ago" },
+    { rank: 3, name: "Charlie", score: 80, solved: 1, lastSolved: "6 hours ago" },
+    { rank: 4, name: "Diana", score: 60, solved: 1, lastSolved: "8 hours ago" },
+    { rank: 5, name: "Eve", score: 40, solved: 0, lastSolved: "Never" },
+  ]
+
+  const achievements: Achievement[] = [
+    { id: '1', title: 'First Blood', description: 'Complete your first challenge', icon: '🩸', unlocked: true, rarity: 'common' },
+    { id: '2', title: 'Speed Demon', description: 'Complete a challenge in under 5 minutes', icon: '⚡', unlocked: false, rarity: 'rare' },
+    { id: '3', title: 'Perfectionist', description: 'Achieve 100% accuracy on a challenge', icon: '💎', unlocked: false, rarity: 'epic' },
+    { id: '4', title: 'Legend', description: 'Reach top 10 on the leaderboard', icon: '👑', unlocked: false, rarity: 'legendary' },
+  ]
+
+  const recentActivity: Activity[] = [
+    { id: '1', type: 'challenge_completed', title: 'Challenge Completed', description: 'SQL Injection Master - Advanced Level', timestamp: '2 hours ago', icon: '✅' },
+    { id: '2', type: 'streak_achieved', title: 'Streak Achieved', description: '3-day solving streak!', timestamp: '1 day ago', icon: '🔥' },
+    { id: '3', type: 'rank_up', title: 'Rank Improved', description: 'Moved up to #42 on the leaderboard', timestamp: '3 days ago', icon: '📈' },
+    { id: '4', type: 'badge_earned', title: 'Badge Earned', description: 'Unlocked "First Blood" achievement', timestamp: '1 week ago', icon: '🏆' },
+  ]
 
   useEffect(() => {
     const animateWords = () => {
@@ -85,45 +98,109 @@ export default function Dashboard() {
     }
   }, [])
 
-  const handleFlagSubmit = async (challengeId: string) => {
-    const flag = flagInputs[challengeId]?.trim()
-    if (!flag) return
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(new Date().toLocaleTimeString())
+    }
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
-    setIsLoading(prev => ({ ...prev, [challengeId]: true }))
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // For demo purposes, accept any flag that contains "CTF"
-      if (flag.toUpperCase().includes('CTF')) {
-        setChallenges(prev => prev.map(challenge =>
-          challenge.id === challengeId
-            ? { ...challenge, status: 'solved' as const }
-            : challenge
-        ))
-        setFlagInputs(prev => ({ ...prev, [challengeId]: '' }))
-        alert('🎉 Correct flag! Challenge solved!')
-      } else {
-        alert('❌ Incorrect flag. Try again!')
+  useEffect(() => {
+    const fetchCurrentIP = async () => {
+      try {
+        const { data } = await supabase.from('site_ip').select('ip_address').single()
+        if (data?.ip_address) {
+          setCurrentIP(data.ip_address)
+          console.log(data.ip_address)
+        }
+      } catch (error) {
+        console.error('Error fetching current IP:', error)
       }
-    } catch (error) {
-      alert('❌ Error submitting flag. Please try again.')
-    } finally {
-      setIsLoading(prev => ({ ...prev, [challengeId]: false }))
+    }
+
+    fetchCurrentIP()
+  }, [])
+
+  useEffect(() => {
+    const setupPlayer = async () => {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError || !user) {
+          console.error('No user found or auth error:', userError)
+          window.location.href = '/register'
+          return
+        }
+
+        console.log('Authenticated user:', user)
+        setUser(user)
+
+        // Check if player exists
+        const { data: existingPlayer, error: checkError } = await supabase
+          .from('players')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking existing player:', checkError)
+        }
+
+        if (existingPlayer) {
+          console.log('Player already exists:', existingPlayer)
+          setPlayer(existingPlayer)
+        } else {
+          console.log('No player found - user needs to create profile')
+          // Don't redirect automatically, let them go back to create profile if needed
+        }
+      } catch (error) {
+        console.error('Error in setupPlayer:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    setupPlayer()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono overflow-hidden relative">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/60">Loading your dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'border-gray-400 bg-gray-400/10'
+      case 'rare': return 'border-blue-400 bg-blue-400/10'
+      case 'epic': return 'border-purple-400 bg-purple-400/10'
+      case 'legendary': return 'border-yellow-400 bg-yellow-400/10'
+      default: return 'border-gray-400 bg-gray-400/10'
     }
   }
 
-  const handleFlagInputChange = (challengeId: string, value: string) => {
-    setFlagInputs(prev => ({ ...prev, [challengeId]: value }))
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'challenge_completed': return '🎯'
+      case 'streak_achieved': return '🔥'
+      case 'rank_up': return '📈'
+      case 'badge_earned': return '🏆'
+      default: return '📊'
+    }
   }
-
-  const solvedChallenges = challenges.filter(c => c.status === 'solved').length
-  const totalPoints = challenges.filter(c => c.status === 'solved').reduce((sum, c) => sum + c.points, 0)
 
   return (
     <div className="min-h-screen bg-black text-white font-mono overflow-hidden relative">
-      {/* Grid Background */}
+      {/* Animated Grid Background */}
       <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
@@ -141,263 +218,409 @@ export default function Dashboard() {
         <circle cx="80%" cy="80%" r="2" className="detail-dot" style={{ animationDelay: '3.6s' }} />
       </svg>
 
-      {/* Sidebar Navigation */}
-      <nav className="fixed left-0 top-0 h-full w-64 bg-black/90 backdrop-blur-sm border-r border-white/10 z-20 p-8">
-        <div className="nav-item mb-8" style={{ animationDelay: '0.2s' }}>
-          <h2 className="text-xl font-bold">AIGIESCTF_2025</h2>
-          <div className="w-6 h-px bg-white/30 mt-2"></div>
-        </div>
-        <ul className="space-y-6">
-          <li className="nav-item" style={{ animationDelay: '0.4s' }}>
-            <a href="/" className="block text-lg hover:text-white/80 transition-colors">HOME</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '0.6s' }}>
-            <a href="/about" className="block text-lg hover:text-white/80 transition-colors">ABOUT</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '0.8s' }}>
-            <a href="/team" className="block text-lg hover:text-white/80 transition-colors">TEAM</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '1s' }}>
-            <a href="/dashboard" className="block text-lg text-white/90">DASHBOARD</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '1.2s' }}>
-            <a href="/leaderboard" className="block text-lg hover:text-white/80 transition-colors">LEADERBOARD</a>
-          </li>
-          <li className="nav-item" style={{ animationDelay: '1.4s' }}>
-            <a href="/admin" className="block text-lg hover:text-white/80 transition-colors">ADMIN</a>
-          </li>
-        </ul>
-        <div className="absolute bottom-8 left-8 nav-item" style={{ animationDelay: '1.4s' }}>
-          <div className="text-sm opacity-60">
-            <p>v2.1.0</p>
-            <p>ONLINE</p>
-          </div>
-        </div>
-      </nav>
+      {/* Header with Live Stats */}
+      <div className="relative z-10 p-4 lg:p-6 border-b border-white/10">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="text-left">
+              <div className="mb-2">
+                <h2 className="text-xs font-normal text-white/60 uppercase tracking-[0.3em] mb-1">
+                  <span className="word" data-delay="0">Mission Control</span>
+                </h2>
+                <div className="w-8 h-px bg-white/30"></div>
+              </div>
 
-      {/* Floating Elements */}
-      <div className="floating-element" style={{ top: '25%', left: '35%', animationDelay: '3s' }}></div>
-      <div className="floating-element" style={{ top: '60%', left: '85%', animationDelay: '3.5s' }}></div>
-      <div className="floating-element" style={{ top: '40%', left: '30%', animationDelay: '4s' }}></div>
-      <div className="floating-element" style={{ top: '75%', left: '90%', animationDelay: '4.5s' }}></div>
+              <h1 className="text-2xl lg:text-3xl font-bold leading-tight tracking-tight mb-2">
+                <div className="mb-1">
+                  <span className="word text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400" data-delay="200">CYBERSECURITY</span>
+                </div>
+                <div className="text-lg lg:text-xl font-normal text-white/80">
+                  <span className="word" data-delay="400">COMMAND CENTER</span>
+                </div>
+              </h1>
 
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen ml-64 flex flex-col">
-        {/* Header Section */}
-        <div className="p-8 border-b border-white/10">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="mb-6">
-              <h2 className="text-sm font-normal text-white/60 uppercase tracking-[0.3em] mb-3">
-                <span className="word" data-delay="0">CTF Dashboard</span>
-              </h2>
-              <div className="w-12 h-px bg-white/30 mx-auto"></div>
+              <p className="text-sm leading-relaxed text-white/70 max-w-xl">
+                <span className="word" data-delay="600">Greetings, </span>
+                <span className="word text-white font-semibold" data-delay="800">{player?.player_name || user?.email?.split('@')[0]}</span>
+                <span className="word" data-delay="1000">! Your digital fortress awaits.</span>
+              </p>
             </div>
 
-            <h1 className="text-4xl lg:text-6xl font-bold leading-tight tracking-tight mb-6">
-              <div className="mb-3">
-                <span className="word" data-delay="800">MISSION</span>
-              </div>
-              <div className="text-2xl lg:text-3xl font-normal text-white/80">
-                <span className="word" data-delay="1200">CONTROL</span>
-              </div>
-            </h1>
-
-            <p className="text-base leading-relaxed text-white/70 mb-0 max-w-lg mx-auto">
-              <span className="word" data-delay="1600">Monitor</span>
-              <span className="word" data-delay="1750">your</span>
-              <span className="word" data-delay="1900">progress,</span>
-              <span className="word" data-delay="2050">tackle</span>
-              <span className="word" data-delay="2200">challenges,</span>
-              <span className="word" data-delay="2350">and</span>
-              <span className="word" data-delay="2500">dominate</span>
-              <span className="word" data-delay="2650">the</span>
-              <span className="word" data-delay="2800">competition.</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* CTF Server Info Card */}
-            <div className="lg:col-span-1">
-              <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-                <h3 className="text-lg font-bold mb-4 text-white/90 flex items-center">
-                  <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></span>
-                  CTF Server Status
-                </h3>
-
-                <div className="space-y-4 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">Server IP:</span>
-                    <span className="text-green-400 font-mono">192.168.1.10</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">Port:</span>
-                    <span className="text-green-400 font-mono">1337</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">Status:</span>
-                    <span className="text-green-400">ONLINE</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">Uptime:</span>
-                    <span className="text-green-400">24h 37m</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <div className="text-xs text-white/50 mb-2">Connection Test:</div>
-                  <button className="w-full px-3 py-2 bg-green-500/20 border border-green-500/30 rounded text-green-400 text-xs hover:bg-green-500/30 transition-colors">
-                    PING SERVER
-                  </button>
-                </div>
-              </div>
-
-              {/* Scoreboard Sidebar */}
-              <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-                <h3 className="text-lg font-bold mb-4 text-white/90 flex items-center">
-                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                  Scoreboard
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-blue-500/10 rounded">
-                    <div>
-                      <div className="text-sm font-medium text-white/90">Your Score</div>
-                      <div className="text-xs text-white/60">Individual</div>
-                    </div>
-                    <div className="text-xl font-bold text-blue-400">{totalPoints}</div>
-                  </div>
-
-                  <div className="flex justify-between items-center p-3 bg-purple-500/10 rounded">
-                    <div>
-                      <div className="text-sm font-medium text-white/90">Team Score</div>
-                      <div className="text-xs text-white/60">Team Total</div>
-                    </div>
-                    <div className="text-xl font-bold text-purple-400">{totalPoints}</div>
-                  </div>
-
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded">
-                    <div>
-                      <div className="text-sm font-medium text-white/90">Challenges Solved</div>
-                      <div className="text-xs text-white/60">Progress</div>
-                    </div>
-                    <div className="text-xl font-bold text-white/90">{solvedChallenges}/{challenges.length}</div>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <button className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white/80 text-xs hover:bg-white/20 transition-colors">
-                    VIEW FULL LEADERBOARD
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Challenges Grid */}
-            <div className="lg:col-span-3">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white/90 mb-2">Active Challenges</h2>
-                <p className="text-white/60 text-sm">Select a challenge and submit the correct flag to earn points</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {challenges.map((challenge, index) => (
-                  <div
-                    key={challenge.id}
-                    className={`bg-white/5 border rounded-lg p-6 transition-all duration-300 hover:bg-white/10 ${
-                      challenge.status === 'solved' ? 'border-green-500/30 bg-green-500/5' : 'border-white/10'
-                    }`}
-                    style={{ animationDelay: `${index * 0.1 + 0.5}s` }}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white/90 mb-1">{challenge.title}</h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            challenge.status === 'solved'
-                              ? 'bg-green-500/20 text-green-400'
-                              : 'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {challenge.status === 'solved' ? 'SOLVED' : 'UNSOLVED'}
-                          </span>
-                          <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded">
-                            {challenge.category}
-                          </span>
-                        </div>
-                        <p className="text-white/60 text-sm mb-4">{challenge.description}</p>
-                      </div>
-                      <div className={`text-2xl font-bold ml-4 ${
-                        challenge.status === 'solved' ? 'text-green-400' : 'text-white/90'
-                      }`}>
-                        {challenge.points}
-                      </div>
-                    </div>
-
-                    {challenge.status !== 'solved' && (
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={flagInputs[challenge.id] || ''}
-                            onChange={(e) => handleFlagInputChange(challenge.id, e.target.value)}
-                            placeholder="Enter flag here..."
-                            className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded text-white placeholder-white/50 focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-sm"
-                            onKeyPress={(e) => e.key === 'Enter' && handleFlagSubmit(challenge.id)}
-                          />
-                          <button
-                            onClick={() => handleFlagSubmit(challenge.id)}
-                            disabled={isLoading[challenge.id] || !flagInputs[challenge.id]?.trim()}
-                            className={`px-4 py-2 font-bold text-sm transition-all duration-300 ${
-                              isLoading[challenge.id] || !flagInputs[challenge.id]?.trim()
-                                ? 'bg-white/10 text-white/50 cursor-not-allowed'
-                                : 'bg-white text-black hover:bg-white/90 transform hover:scale-105'
-                            }`}
-                          >
-                            {isLoading[challenge.id] ? '...' : 'SUBMIT'}
-                          </button>
-                        </div>
-                        <div className="text-xs text-white/50">
-                          💡 Hint: Flags usually start with "CTF{" and end with "}"
-                        </div>
-                      </div>
-                    )}
-
-                    {challenge.status === 'solved' && (
-                      <div className="flex items-center justify-center p-4 bg-green-500/10 rounded border border-green-500/30">
-                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-green-400 text-lg">✓</span>
-                        </div>
-                        <span className="text-green-400 font-medium">Challenge Completed!</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-white/90 mb-1">{challenges.length}</div>
-                  <div className="text-xs text-white/60 uppercase tracking-wide">Total Challenges</div>
-                </div>
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-400 mb-1">{solvedChallenges}</div>
-                  <div className="text-xs text-green-400 uppercase tracking-wide">Solved</div>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-white/90 mb-1">{totalPoints}</div>
-                  <div className="text-xs text-white/60 uppercase tracking-wide">Points Earned</div>
-                </div>
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-400 mb-1">#{Math.floor(Math.random() * 10) + 1}</div>
-                  <div className="text-xs text-blue-400 uppercase tracking-wide">Rank</div>
-                </div>
+            {/* Live Stats Cards */}
+            <div className="flex flex-wrap gap-3">
+              <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-lg p-3 min-w-[100px] text-center">
+                <div className="text-lg font-bold text-purple-400 mb-1">{currentTime}</div>
+                <div className="text-xs text-purple-300 uppercase tracking-wide">Server Time</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Enhanced Navigation Tabs */}
+      <div className="relative z-10 px-4 lg:px-6 py-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-center mb-6">
+            <div className="bg-white/5 rounded-xl p-1.5 border border-white/10 backdrop-blur-sm">
+              <div className="flex space-x-1">
+                {[
+                  { id: 'overview', label: 'Overview', icon: '🏠' },
+                  { id: 'profile', label: 'Profile', icon: '👤' },
+                  { id: 'leaderboards', label: 'Leaderboard', icon: '🏆' },
+                  { id: 'progress', label: 'Progress', icon: '📈' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as TabType)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-white/20 to-white/10 text-white shadow-lg'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="text-sm">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Tab Content */}
+          <div className="min-h-[500px]">
+            {activeTab === 'overview' && (
+                <div className="max-w-4xl mx-auto">
+                  <div className="mb-6 text-center">
+                    <h3 className="text-2xl font-bold mb-3">System Overview</h3>
+                    <p className="text-white/60 text-sm">Monitor your cybersecurity platform status and configuration</p>
+                  </div>
+
+                  {/* Network Configuration - Full Width */}
+                  <div className="bg-white/5 rounded-xl border border-white/10 p-6 mb-6">
+                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+                      Network Configuration
+                    </h4>
+
+                    <div className="space-y-4">
+                      {/* Site IP Display */}
+                      <div className="p-4 bg-black/30 border border-white/10 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="text-base font-semibold text-white/90">Primary IP Address</h5>
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                            <span className="text-xs text-green-400 uppercase tracking-wide">Active</span>
+                          </div>
+                        </div>
+
+                        <div className="text-center">
+                          <div className="inline-flex items-center px-4 py-2 bg-white/10 border border-white/20 rounded-lg">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              <span className="font-mono text-base text-white">{currentIP || 'Loading...'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 text-center">
+                          <p className="text-xs text-white/60">
+                            Current site IP address • Last updated: {new Date().toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Network Info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-white/5 rounded-lg text-center">
+                          <div className="text-lg font-bold text-blue-400 mb-1">IPv4</div>
+                          <div className="text-xs text-white/60">Protocol</div>
+                        </div>
+                        <div className="p-3 bg-white/5 rounded-lg text-center">
+                          <div className="text-lg font-bold text-green-400 mb-1">99.9%</div>
+                          <div className="text-xs text-white/60">Uptime</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Information - Full Width */}
+                  <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+                    <h4 className="text-base font-bold mb-3 flex items-center">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
+                      Platform Information
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-purple-400 mb-1">v2.1.0</div>
+                        <div className="text-xs text-white/60 uppercase tracking-wide">Platform Version</div>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-blue-400 mb-1">{new Date().toLocaleDateString()}</div>
+                        <div className="text-xs text-white/60 uppercase tracking-wide">Current Date</div>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-green-400 mb-1">UTC+5:30</div>
+                        <div className="text-xs text-white/60 uppercase tracking-wide">Server Timezone</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            )}
+
+            {activeTab === 'profile' && (
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-bold mb-4">User Profile</h3>
+                  <p className="text-white/60">Manage your cybersecurity persona</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Profile Card */}
+                  <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl border border-white/20 p-8">
+                    <div className="text-center mb-6">
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold shadow-lg">
+                        {(player?.player_name || user?.email?.[0] || 'P').toUpperCase()}
+                      </div>
+                      <h4 className="text-2xl font-bold">{player?.player_name || 'Player'}</h4>
+                      <p className="text-white/60">{user?.email}</p>
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400 border border-green-500/30">
+                          <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                          Online
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                        <span className="text-white/60">Member Since</span>
+                        <span className="font-medium">{new Date(user?.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                        <span className="text-white/60">Last Active</span>
+                        <span className="font-medium">Just now</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                        <span className="text-white/60">Timezone</span>
+                        <span className="font-medium">UTC+5:30</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Overview */}
+                  <div className="space-y-6">
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                      <h4 className="text-lg font-bold mb-4">Performance Stats</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400">0%</div>
+                          <div className="text-sm text-white/60">Success Rate</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">0</div>
+                          <div className="text-sm text-white/60">Avg. Time</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-400">0</div>
+                          <div className="text-sm text-white/60">Hints Used</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-yellow-400">0</div>
+                          <div className="text-sm text-white/60">Best Streak</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                      <h4 className="text-lg font-bold mb-4">Recent Badges</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {achievements.filter(a => a.unlocked).map((achievement) => (
+                          <div key={achievement.id} className={`p-2 rounded-lg border text-sm ${getRarityColor(achievement.rarity)}`}>
+                            <div className="flex items-center space-x-2">
+                              <span>{achievement.icon}</span>
+                              <span>{achievement.title}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'leaderboards' && (
+              <div className="max-w-6xl mx-auto">
+                <div className="mb-6 text-center">
+                  <h3 className="text-3xl font-bold mb-2">Global Leaderboard</h3>
+                  <p className="text-white/60">See how you stack up against the best</p>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="grid grid-cols-12 gap-4 p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/10 text-white/80 text-sm font-medium">
+                    <div className="col-span-2 text-center">Rank</div>
+                    <div className="col-span-4">Player</div>
+                    <div className="col-span-2 text-center">Score</div>
+                    <div className="col-span-2 text-center">Solved</div>
+                    <div className="col-span-2 text-center">Last Activity</div>
+                  </div>
+
+                  {players.map((player, index) => (
+                    <div
+                      key={player.rank}
+                      className={`grid grid-cols-12 gap-4 p-6 border-b border-white/5 hover:bg-white/5 transition-all duration-200 ${player.rank <= 3 ? 'bg-gradient-to-r from-white/5 to-white/10' : ''}`}
+                      style={{ animationDelay: `${index * 0.1 + 0.5}s` }}
+                    >
+                      <div className="col-span-2 flex items-center justify-center">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{getRankIcon(player.rank)}</span>
+                          <span className={`font-bold text-lg ${player.rank <= 3 ? 'text-white' : 'text-white/60'}`}>
+                            #{player.rank}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="col-span-4 flex items-center">
+                        <div className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center text-sm font-bold ${
+                          player.rank <= 3 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' : 'bg-white/10'
+                        }`}>
+                          {player.name[0]}
+                        </div>
+                        <span className={`font-medium ${player.rank <= 3 ? 'text-white' : 'text-white/90'}`}>
+                          {player.name}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className={`font-bold text-lg ${player.rank <= 3 ? 'text-white' : 'text-white/90'}`}>
+                          {player.score}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className={`font-medium ${player.rank <= 3 ? 'text-white' : 'text-white/60'}`}>
+                          {player.solved}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className={`text-sm ${player.rank <= 3 ? 'text-white/80' : 'text-white/50'}`}>
+                          {player.lastSolved}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'progress' && (
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-bold mb-4">Progress Tracking</h3>
+                  <p className="text-white/60">Monitor your cybersecurity journey</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Progress Overview */}
+                  <div className="space-y-6">
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                      <h4 className="text-xl font-bold mb-6">Challenge Categories</h4>
+                      <div className="space-y-4">
+                        {[
+                          { name: 'Web Security', completed: 0, total: 5, color: 'blue' },
+                          { name: 'Cryptography', completed: 0, total: 4, color: 'green' },
+                          { name: 'Forensics', completed: 0, total: 3, color: 'purple' },
+                          { name: 'Reverse Engineering', completed: 0, total: 2, color: 'red' }
+                        ].map((category) => (
+                          <div key={category.name} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">{category.name}</span>
+                              <span className="text-sm text-white/60">{category.completed}/{category.total}</span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-3">
+                              <div
+                                className={`bg-gradient-to-r from-${category.color}-500 to-${category.color}-600 h-3 rounded-full transition-all duration-500`}
+                                style={{ width: `${(category.completed / category.total) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Skill Development */}
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                      <h4 className="text-xl font-bold mb-6">Skill Development</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[
+                          { skill: 'SQL Injection', level: 0, maxLevel: 5 },
+                          { skill: 'XSS Prevention', level: 0, maxLevel: 5 },
+                          { skill: 'Network Analysis', level: 0, maxLevel: 5 },
+                          { skill: 'Password Cracking', level: 0, maxLevel: 5 }
+                        ].map((skill) => (
+                          <div key={skill.skill} className="text-center p-4 bg-white/5 rounded-lg">
+                            <div className="text-sm font-medium mb-2">{skill.skill}</div>
+                            <div className="flex justify-center space-x-1">
+                              {Array.from({ length: skill.maxLevel }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-2 h-2 rounded-full ${i < skill.level ? 'bg-blue-400' : 'bg-white/20'}`}
+                                ></div>
+                              ))}
+                            </div>
+                            <div className="text-xs text-white/60 mt-1">Level {skill.level}/{skill.maxLevel}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Progress */}
+                  <div className="space-y-6">
+                    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
+                      <h4 className="text-xl font-bold mb-6">Detailed Statistics</h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span className="text-white/60">Total Challenges Attempted</span>
+                          <span className="font-bold">0</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span className="text-white/60">Success Rate</span>
+                          <span className="font-bold text-green-400">0%</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span className="text-white/60">Average Completion Time</span>
+                          <span className="font-bold">0 min</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span className="text-white/60">Hints Used</span>
+                          <span className="font-bold">0</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Motivational Section */}
+                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-6 text-center">
+                      <div className="text-4xl mb-4">🚀</div>
+                      <h4 className="text-xl font-bold mb-2">Ready for More?</h4>
+                      <p className="text-white/60 text-sm mb-4">
+                        Complete your first challenge to unlock detailed progress tracking and personalized recommendations!
+                      </p>
+                      <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200">
+                        Start Learning
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Elements for Visual Appeal */}
+      <div className="floating-element" style={{ top: '15%', left: '10%', animationDelay: '2s' }}></div>
+      <div className="floating-element" style={{ top: '35%', left: '90%', animationDelay: '2.5s' }}></div>
+      <div className="floating-element" style={{ top: '65%', left: '15%', animationDelay: '3s' }}></div>
+      <div className="floating-element" style={{ top: '85%', left: '85%', animationDelay: '3.5s' }}></div>
 
       {/* Interactive Gradient */}
       {showGradient && (
@@ -411,4 +634,11 @@ export default function Dashboard() {
       )}
     </div>
   )
+
+  function getRankIcon(rank: number) {
+    if (rank === 1) return '🥇'
+    if (rank === 2) return '🥈'
+    if (rank === 3) return '🥉'
+    return ''
+  }
 }
